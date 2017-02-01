@@ -11,8 +11,8 @@
   DTS:LocaleID="2070"
   DTS:ObjectName="Package"
   DTS:PackageType="5"
-  DTS:VersionBuild="9"
-  DTS:VersionGUID="{21EDD5D8-5B04-4A78-8103-56758295D357}">
+  DTS:VersionBuild="15"
+  DTS:VersionGUID="{3D6115A4-1321-4133-BAB2-FEDAFA7FD2A1}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -30,6 +30,23 @@
   <DTS:Variables />
   <DTS:Executables>
     <DTS:Executable
+      DTS:refId="Package\Apply Staged Deletes"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:DTSID="{7929c14a-d4e8-487f-b0e0-54d6e891b57a}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Apply Staged Deletes"
+      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2016; © 2015 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{BBC7B887-DE9B-41D1-B4FC-3DE3B8F01572}"
+          SQLTask:SqlStatementSource="Delete src&#xA;From Person.Contact src&#xA;   Join StageDeletes stage&#xA;     On stage.Email = src.Email" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
       DTS:refId="Package\Apply Staged Updates"
       DTS:CreationName="Microsoft.ExecuteSQLTask"
       DTS:Description="Execute SQL Task"
@@ -43,17 +60,17 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{BBC7B887-DE9B-41D1-B4FC-3DE3B8F01572}"
-          SQLTask:SqlStatementSource="Update dest&#xA; Set dest.FirstName = stage.FirstName&#xA;  , dest.MiddleName = stage.MiddleName&#xA;  , dest.LastName = stage.LastName&#xA; From dbo.Contact dest&#xA;   Join dbo.StageUpdates stage&#xA;    On stage.Email = dest.Email" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="Update dest&#xA; Set dest.FirstName = stage.FirstName&#xA;  , dest.MiddleName = stage.MiddleName&#xA;  , dest.LastName = stage.LastName&#xA; From Person.Contact dest&#xA;   Join dbo.StageUpdates stage&#xA;    On stage.Email = dest.Email" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
       </DTS:ObjectData>
     </DTS:Executable>
     <DTS:Executable
-      DTS:refId="Package\Data Flow Task"
+      DTS:refId="Package\Delete  Rows"
       DTS:CreationName="Microsoft.Pipeline"
       DTS:Description="Data Flow Task"
-      DTS:DTSID="{5CB2C5E8-7A71-4435-A9FC-9DC451F52E4F}"
+      DTS:DTSID="{76C93B2F-1435-4524-B31E-29CEEF9BEEC7}"
       DTS:ExecutableType="Microsoft.Pipeline"
       DTS:LocaleID="-1"
-      DTS:ObjectName="Data Flow Task"
+      DTS:ObjectName="Delete  Rows"
       DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
       <DTS:Variables />
       <DTS:ObjectData>
@@ -61,118 +78,154 @@
           version="1">
           <components>
             <component
-              refId="Package\Data Flow Task\Conditional Split"
-              componentClassID="Microsoft.ConditionalSplit"
-              contactInfo="Conditional Split;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;0"
-              description="Routes data rows to different outputs depending on the content of the data. Use conditions (SSIS expressions) to specify which rows are routed. For example, separate records that need to be cleaned from those that are ready to be loaded or route only a subset of records."
-              name="Conditional Split"
-              usesDispositions="true">
+              refId="Package\Delete  Rows\Lookup"
+              componentClassID="Microsoft.Lookup"
+              contactInfo="Lookup;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;6"
+              description="Joins additional columns to the data flow by looking up values in a table. For example, join to the 'employee id' column the employees table to get 'hire date' and 'employee name'. We recommend this transformation when the lookup table can fit into memory."
+              name="Lookup"
+              usesDispositions="true"
+              version="6">
+              <properties>
+                <property
+                  dataType="System.String"
+                  description="Specifies the SQL statement that generates the lookup table."
+                  expressionType="Notify"
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">SELECT
+	EA.EmailAddress
+
+FROM Person.Person AS P
+
+LEFT JOIN Person.EmailAddress AS EA
+
+ON EA.BusinessEntityID = P.BusinessEntityID</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies a SQL statement that uses parameters to generate the lookup table."
+                  expressionType="Notify"
+                  name="SqlCommandParam"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">select * from (SELECT
+	EA.EmailAddress
+
+FROM Person.Person AS P
+
+LEFT JOIN Person.EmailAddress AS EA
+
+ON EA.BusinessEntityID = P.BusinessEntityID) [refTable]
+where [refTable].[EmailAddress] = ?</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the type of connection used to access the reference dataset."
+                  name="ConnectionType"
+                  typeConverter="LookupConnectionType">0</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the cache type of the lookup table."
+                  name="CacheType"
+                  typeConverter="CacheType">0</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies how the Lookup transformation handles rows without matching entries in the reference data set."
+                  name="NoMatchBehavior"
+                  typeConverter="LookupNoMatchBehavior">1</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the percentage of the cache that is allocated for rows with no matching entries in the reference dataset."
+                  name="NoMatchCachePercentage">0</property>
+                <property
+                  dataType="System.Int32"
+                  description="Maximum Memory Usage for Reference Cache on a 32 bit platform."
+                  name="MaxMemoryUsage">25</property>
+                <property
+                  dataType="System.Int64"
+                  description="Maximum Memory Usage for Reference Cache on a 64 bit platform."
+                  name="MaxMemoryUsage64">25</property>
+                <property
+                  dataType="System.String"
+                  description="Indicates whether to reference metadata in an XML format."
+                  name="ReferenceMetadataXml">&lt;referenceMetadata&gt;&lt;referenceColumns&gt;&lt;referenceColumn name="EmailAddress" dataType="DT_WSTR" length="50" precision="0" scale="0" codePage="0"/&gt;&lt;/referenceColumns&gt;&lt;/referenceMetadata&gt;</property>
+                <property
+                  containsID="true"
+                  dataType="System.String"
+                  description="Specifies the list of lineage identifiers that map to the parameters that the SQL statement in the SQLCommand property uses. Entries in the list are separated by semicolons."
+                  name="ParameterMap">#{Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]};</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Determines whether duplicate keys in the reference data should be treated as errors when full cache mode is used."
+                  name="TreatDuplicateKeysAsError">false</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Delete  Rows\Lookup.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
+                  connectionManagerRefId="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
+                  description="Connection manager used to access lookup data."
+                  name="OleDbConnection" />
+              </connections>
               <inputs>
                 <input
-                  refId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input]"
-                  description="Input to the Conditional Split Transformation"
-                  name="Conditional Split Input">
+                  refId="Package\Delete  Rows\Lookup.Inputs[Lookup Input]"
+                  name="Lookup Input">
                   <inputColumns>
                     <inputColumn
-                      refId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input].Columns[FirstName]"
+                      refId="Package\Delete  Rows\Lookup.Inputs[Lookup Input].Columns[Email]"
                       cachedDataType="wstr"
                       cachedLength="50"
-                      cachedName="FirstName"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]" />
-                    <inputColumn
-                      refId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input].Columns[MiddleName]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="MiddleName"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]" />
-                    <inputColumn
-                      refId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input].Columns[LastName]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="LastName"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]" />
-                    <inputColumn
-                      refId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input].Columns[LkUp_FirstName]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="LkUp_FirstName"
-                      lineageId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_FirstName]" />
-                    <inputColumn
-                      refId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input].Columns[LkUp_LastName]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="LkUp_LastName"
-                      lineageId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_LastName]" />
-                    <inputColumn
-                      refId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input].Columns[LkUp_MiddleName]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="LkUp_MiddleName"
-                      lineageId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_MiddleName]" />
+                      cachedName="Email"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]">
+                      <properties>
+                        <property
+                          dataType="System.String"
+                          description="Specifies the column in the reference table that a column joins."
+                          name="JoinToReferenceColumn">EmailAddress</property>
+                        <property
+                          dataType="System.Null"
+                          description="Specifies the column in the reference table from which a column is copied."
+                          name="CopyFromReferenceColumn" />
+                      </properties>
+                    </inputColumn>
                   </inputColumns>
                   <externalMetadataColumns />
                 </input>
               </inputs>
               <outputs>
                 <output
-                  refId="Package\Data Flow Task\Conditional Split.Outputs[Updated Rows]"
-                  description="Output 1 of the Conditional Split Transformation"
-                  errorOrTruncationOperation="Computation"
-                  errorRowDisposition="FailComponent"
+                  refId="Package\Delete  Rows\Lookup.Outputs[Lookup Match Output]"
+                  errorOrTruncationOperation="Lookup"
                   exclusionGroup="1"
-                  name="Updated Rows"
-                  synchronousInputId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input]"
-                  truncationRowDisposition="FailComponent">
-                  <properties>
-                    <property
-                      containsID="true"
-                      dataType="System.String"
-                      description="Specifies the expression. This expression version uses lineage identifiers instead of column names."
-                      name="Expression">(#{Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]} != #{Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_FirstName]}) || (([ISNULL](#{Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]}) ? "Humperdinck" : #{Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]}) != ([ISNULL](#{Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_MiddleName]}) ? "Humperdinck" : #{Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_MiddleName]})) || (#{Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]} != #{Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_LastName]})</property>
-                    <property
-                      containsID="true"
-                      dataType="System.String"
-                      description="Specifies the friendly version of the expression. This expression version uses column names."
-                      expressionType="Notify"
-                      name="FriendlyExpression">(FirstName != LkUp_FirstName) || ((ISNULL(MiddleName) ? "Humperdinck" : MiddleName) != (ISNULL(LkUp_MiddleName) ? "Humperdinck" : LkUp_MiddleName)) || (LastName != LkUp_LastName)</property>
-                    <property
-                      dataType="System.Int32"
-                      description="Specifies the position of the condition in the list of conditions that the transformation evaluates. The evaluation order is from the lowest to the highest value."
-                      name="EvaluationOrder">0</property>
-                  </properties>
+                  name="Lookup Match Output"
+                  synchronousInputId="Package\Delete  Rows\Lookup.Inputs[Lookup Input]">
                   <externalMetadataColumns />
                 </output>
                 <output
-                  refId="Package\Data Flow Task\Conditional Split.Outputs[Conditional Split Default Output]"
-                  description="Default Output of the Conditional Split Transformation"
+                  refId="Package\Delete  Rows\Lookup.Outputs[Lookup No Match Output]"
+                  description="The Lookup output that handles rows with no matching entries in the reference dataset. Use this output when the NoMatchBehavior property is set to &quot;Send rows with no matching entries to the no match output.&quot;"
                   exclusionGroup="1"
-                  name="Conditional Split Default Output"
-                  synchronousInputId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input]">
-                  <properties>
-                    <property
-                      dataType="System.Boolean"
-                      name="IsDefaultOut">true</property>
-                  </properties>
+                  name="Lookup No Match Output"
+                  synchronousInputId="Package\Delete  Rows\Lookup.Inputs[Lookup Input]">
                   <externalMetadataColumns />
                 </output>
                 <output
-                  refId="Package\Data Flow Task\Conditional Split.Outputs[Conditional Split Error Output]"
-                  description="Error Output of the Conditional Split Transformation"
+                  refId="Package\Delete  Rows\Lookup.Outputs[Lookup Error Output]"
                   exclusionGroup="1"
                   isErrorOut="true"
-                  name="Conditional Split Error Output"
-                  synchronousInputId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input]">
+                  name="Lookup Error Output"
+                  synchronousInputId="Package\Delete  Rows\Lookup.Inputs[Lookup Input]">
                   <outputColumns>
                     <outputColumn
-                      refId="Package\Data Flow Task\Conditional Split.Outputs[Conditional Split Error Output].Columns[ErrorCode]"
+                      refId="Package\Delete  Rows\Lookup.Outputs[Lookup Error Output].Columns[ErrorCode]"
                       dataType="i4"
-                      lineageId="Package\Data Flow Task\Conditional Split.Outputs[Conditional Split Error Output].Columns[ErrorCode]"
+                      lineageId="Package\Delete  Rows\Lookup.Outputs[Lookup Error Output].Columns[ErrorCode]"
                       name="ErrorCode"
                       specialFlags="1" />
                     <outputColumn
-                      refId="Package\Data Flow Task\Conditional Split.Outputs[Conditional Split Error Output].Columns[ErrorColumn]"
+                      refId="Package\Delete  Rows\Lookup.Outputs[Lookup Error Output].Columns[ErrorColumn]"
                       dataType="i4"
-                      lineageId="Package\Data Flow Task\Conditional Split.Outputs[Conditional Split Error Output].Columns[ErrorColumn]"
+                      lineageId="Package\Delete  Rows\Lookup.Outputs[Lookup Error Output].Columns[ErrorColumn]"
                       name="ErrorColumn"
                       specialFlags="2" />
                   </outputColumns>
@@ -181,11 +234,183 @@
               </outputs>
             </component>
             <component
-              refId="Package\Data Flow Task\Contact"
+              refId="Package\Delete  Rows\OLE DB Source"
+              componentClassID="Microsoft.OLEDBSource"
+              contactInfo="OLE DB Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;7"
+              description="OLE DB Source"
+              name="OLE DB Source"
+              usesDispositions="true"
+              version="7">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">[Person].[Contact]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
+                <property
+                  dataType="System.String"
+                  description="The variable that contains the SQL command to be executed."
+                  name="SqlCommandVariable"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">0</property>
+                <property
+                  dataType="System.String"
+                  description="The mappings between the parameters in the SQL command and variables."
+                  name="ParameterMapping"></property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Delete  Rows\OLE DB Source.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
+                  connectionManagerRefId="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <outputs>
+                <output
+                  refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output]"
+                  name="OLE DB Source Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[FirstName]"
+                      length="50"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]"
+                      name="FirstName"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[MiddleName]"
+                      length="50"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]"
+                      name="MiddleName"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[LastName]"
+                      length="50"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]"
+                      name="LastName"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[Email]"
+                      length="50"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]"
+                      name="Email"
+                      truncationRowDisposition="FailComponent" />
+                  </outputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[FirstName]"
+                      dataType="wstr"
+                      length="50"
+                      name="FirstName" />
+                    <externalMetadataColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[MiddleName]"
+                      dataType="wstr"
+                      length="50"
+                      name="MiddleName" />
+                    <externalMetadataColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[LastName]"
+                      dataType="wstr"
+                      length="50"
+                      name="LastName" />
+                    <externalMetadataColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[Email]"
+                      dataType="wstr"
+                      length="50"
+                      name="Email" />
+                  </externalMetadataColumns>
+                </output>
+                <output
+                  refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output]"
+                  isErrorOut="true"
+                  name="OLE DB Source Error Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[FirstName]"
+                      dataType="wstr"
+                      length="50"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[FirstName]"
+                      name="FirstName" />
+                    <outputColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[MiddleName]"
+                      dataType="wstr"
+                      length="50"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[MiddleName]"
+                      name="MiddleName" />
+                    <outputColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[LastName]"
+                      dataType="wstr"
+                      length="50"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[LastName]"
+                      name="LastName" />
+                    <outputColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[Email]"
+                      dataType="wstr"
+                      length="50"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[Email]"
+                      name="Email" />
+                    <outputColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\Delete  Rows\StageDeletes"
               componentClassID="Microsoft.OLEDBDestination"
               contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
               description="OLE DB Destination"
-              name="Contact"
+              name="StageDeletes"
               usesDispositions="true"
               version="4">
               <properties>
@@ -196,7 +421,7 @@
                 <property
                   dataType="System.String"
                   description="Specifies the name of the database object used to open a rowset."
-                  name="OpenRowset">[Contact]</property>
+                  name="OpenRowset">[StageDeletes]</property>
                 <property
                   dataType="System.String"
                   description="Specifies the variable that contains the name of the database object used to open a rowset."
@@ -238,7 +463,7 @@
               </properties>
               <connections>
                 <connection
-                  refId="Package\Data Flow Task\Contact.Connections[OleDbConnection]"
+                  refId="Package\Delete  Rows\StageDeletes.Connections[OleDbConnection]"
                   connectionManagerID="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
                   connectionManagerRefId="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
                   description="The OLE DB runtime connection used to access the database."
@@ -246,60 +471,60 @@
               </connections>
               <inputs>
                 <input
-                  refId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input]"
+                  refId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input]"
                   errorOrTruncationOperation="Insert"
                   errorRowDisposition="FailComponent"
                   hasSideEffects="true"
                   name="OLE DB Destination Input">
                   <inputColumns>
                     <inputColumn
-                      refId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].Columns[FirstName]"
+                      refId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].Columns[FirstName]"
                       cachedDataType="wstr"
                       cachedLength="50"
                       cachedName="FirstName"
-                      externalMetadataColumnId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].ExternalColumns[FirstName]"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]" />
+                      externalMetadataColumnId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].ExternalColumns[FirstName]"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]" />
                     <inputColumn
-                      refId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].Columns[MiddleName]"
+                      refId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].Columns[MiddleName]"
                       cachedDataType="wstr"
                       cachedLength="50"
                       cachedName="MiddleName"
-                      externalMetadataColumnId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].ExternalColumns[MiddleName]"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]" />
+                      externalMetadataColumnId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].ExternalColumns[MiddleName]"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]" />
                     <inputColumn
-                      refId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].Columns[LastName]"
+                      refId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].Columns[LastName]"
                       cachedDataType="wstr"
                       cachedLength="50"
                       cachedName="LastName"
-                      externalMetadataColumnId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].ExternalColumns[LastName]"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]" />
+                      externalMetadataColumnId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].ExternalColumns[LastName]"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]" />
                     <inputColumn
-                      refId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].Columns[Email]"
+                      refId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].Columns[Email]"
                       cachedDataType="wstr"
                       cachedLength="50"
                       cachedName="Email"
-                      externalMetadataColumnId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].ExternalColumns[Email]"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]" />
+                      externalMetadataColumnId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].ExternalColumns[Email]"
+                      lineageId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]" />
                   </inputColumns>
                   <externalMetadataColumns
                     isUsed="True">
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].ExternalColumns[FirstName]"
+                      refId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].ExternalColumns[FirstName]"
                       dataType="wstr"
                       length="50"
                       name="FirstName" />
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].ExternalColumns[MiddleName]"
+                      refId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].ExternalColumns[MiddleName]"
                       dataType="wstr"
                       length="50"
                       name="MiddleName" />
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].ExternalColumns[LastName]"
+                      refId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].ExternalColumns[LastName]"
                       dataType="wstr"
                       length="50"
                       name="LastName" />
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input].ExternalColumns[Email]"
+                      refId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input].ExternalColumns[Email]"
                       dataType="wstr"
                       length="50"
                       name="Email" />
@@ -308,22 +533,172 @@
               </inputs>
               <outputs>
                 <output
-                  refId="Package\Data Flow Task\Contact.Outputs[OLE DB Destination Error Output]"
+                  refId="Package\Delete  Rows\StageDeletes.Outputs[OLE DB Destination Error Output]"
                   exclusionGroup="1"
                   isErrorOut="true"
                   name="OLE DB Destination Error Output"
-                  synchronousInputId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input]">
+                  synchronousInputId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input]">
                   <outputColumns>
                     <outputColumn
-                      refId="Package\Data Flow Task\Contact.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      refId="Package\Delete  Rows\StageDeletes.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
                       dataType="i4"
-                      lineageId="Package\Data Flow Task\Contact.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      lineageId="Package\Delete  Rows\StageDeletes.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
                       name="ErrorCode"
                       specialFlags="1" />
                     <outputColumn
-                      refId="Package\Data Flow Task\Contact.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      refId="Package\Delete  Rows\StageDeletes.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
                       dataType="i4"
-                      lineageId="Package\Data Flow Task\Contact.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      lineageId="Package\Delete  Rows\StageDeletes.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+          </components>
+          <paths>
+            <path
+              refId="Package\Delete  Rows.Paths[Lookup No Match Output]"
+              endId="Package\Delete  Rows\StageDeletes.Inputs[OLE DB Destination Input]"
+              name="Lookup No Match Output"
+              startId="Package\Delete  Rows\Lookup.Outputs[Lookup No Match Output]" />
+            <path
+              refId="Package\Delete  Rows.Paths[OLE DB Source Output]"
+              endId="Package\Delete  Rows\Lookup.Inputs[Lookup Input]"
+              name="OLE DB Source Output"
+              startId="Package\Delete  Rows\OLE DB Source.Outputs[OLE DB Source Output]" />
+          </paths>
+        </pipeline>
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\Insert and Update Rows"
+      DTS:CreationName="Microsoft.Pipeline"
+      DTS:Description="Data Flow Task"
+      DTS:DTSID="{5CB2C5E8-7A71-4435-A9FC-9DC451F52E4F}"
+      DTS:ExecutableType="Microsoft.Pipeline"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Insert and Update Rows"
+      DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <pipeline
+          version="1">
+          <components>
+            <component
+              refId="Package\Insert and Update Rows\Conditional Split"
+              componentClassID="Microsoft.ConditionalSplit"
+              contactInfo="Conditional Split;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;0"
+              description="Routes data rows to different outputs depending on the content of the data. Use conditions (SSIS expressions) to specify which rows are routed. For example, separate records that need to be cleaned from those that are ready to be loaded or route only a subset of records."
+              name="Conditional Split"
+              usesDispositions="true">
+              <inputs>
+                <input
+                  refId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input]"
+                  description="Input to the Conditional Split Transformation"
+                  name="Conditional Split Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input].Columns[FirstName]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="FirstName"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]" />
+                    <inputColumn
+                      refId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input].Columns[MiddleName]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="MiddleName"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]" />
+                    <inputColumn
+                      refId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input].Columns[LastName]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="LastName"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]" />
+                    <inputColumn
+                      refId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input].Columns[LkUp_FirstName]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="LkUp_FirstName"
+                      lineageId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_FirstName]" />
+                    <inputColumn
+                      refId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input].Columns[LkUp_LastName]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="LkUp_LastName"
+                      lineageId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_LastName]" />
+                    <inputColumn
+                      refId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input].Columns[LkUp_MiddleName]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="LkUp_MiddleName"
+                      lineageId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_MiddleName]" />
+                  </inputColumns>
+                  <externalMetadataColumns />
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\Insert and Update Rows\Conditional Split.Outputs[Updated Rows]"
+                  description="Output 1 of the Conditional Split Transformation"
+                  errorOrTruncationOperation="Computation"
+                  errorRowDisposition="FailComponent"
+                  exclusionGroup="1"
+                  name="Updated Rows"
+                  synchronousInputId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input]"
+                  truncationRowDisposition="FailComponent">
+                  <properties>
+                    <property
+                      containsID="true"
+                      dataType="System.String"
+                      description="Specifies the expression. This expression version uses lineage identifiers instead of column names."
+                      name="Expression">(#{Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]} != #{Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_FirstName]}) || (([ISNULL](#{Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]}) ? "Humperdinck" : #{Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]}) != ([ISNULL](#{Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_MiddleName]}) ? "Humperdinck" : #{Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_MiddleName]})) || (#{Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]} != #{Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_LastName]})</property>
+                    <property
+                      containsID="true"
+                      dataType="System.String"
+                      description="Specifies the friendly version of the expression. This expression version uses column names."
+                      expressionType="Notify"
+                      name="FriendlyExpression">(FirstName != LkUp_FirstName) || ((ISNULL(MiddleName) ? "Humperdinck" : MiddleName) != (ISNULL(LkUp_MiddleName) ? "Humperdinck" : LkUp_MiddleName)) || (LastName != LkUp_LastName)</property>
+                    <property
+                      dataType="System.Int32"
+                      description="Specifies the position of the condition in the list of conditions that the transformation evaluates. The evaluation order is from the lowest to the highest value."
+                      name="EvaluationOrder">0</property>
+                  </properties>
+                  <externalMetadataColumns />
+                </output>
+                <output
+                  refId="Package\Insert and Update Rows\Conditional Split.Outputs[Conditional Split Default Output]"
+                  description="Default Output of the Conditional Split Transformation"
+                  exclusionGroup="1"
+                  name="Conditional Split Default Output"
+                  synchronousInputId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input]">
+                  <properties>
+                    <property
+                      dataType="System.Boolean"
+                      name="IsDefaultOut">true</property>
+                  </properties>
+                  <externalMetadataColumns />
+                </output>
+                <output
+                  refId="Package\Insert and Update Rows\Conditional Split.Outputs[Conditional Split Error Output]"
+                  description="Error Output of the Conditional Split Transformation"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="Conditional Split Error Output"
+                  synchronousInputId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Insert and Update Rows\Conditional Split.Outputs[Conditional Split Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Insert and Update Rows\Conditional Split.Outputs[Conditional Split Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Insert and Update Rows\Conditional Split.Outputs[Conditional Split Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Insert and Update Rows\Conditional Split.Outputs[Conditional Split Error Output].Columns[ErrorColumn]"
                       name="ErrorColumn"
                       specialFlags="2" />
                   </outputColumns>
@@ -332,7 +707,158 @@
               </outputs>
             </component>
             <component
-              refId="Package\Data Flow Task\Lookup"
+              refId="Package\Insert and Update Rows\Contact"
+              componentClassID="Microsoft.OLEDBDestination"
+              contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
+              description="OLE DB Destination"
+              name="Contact"
+              usesDispositions="true"
+              version="4">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">[Person].[Contact]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">3</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepIdentity">false</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the columns containing null will have null inserted in the destination. If false, columns containing null will have their default values inserted at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepNulls">false</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies options to be used with fast load.  Applies only if fast load is turned on."
+                  name="FastLoadOptions">TABLOCK,CHECK_CONSTRAINTS</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies when commits are issued during data insertion.  A value of 0 specifies that one commit will be issued at the end of data insertion.  Applies only if fast load is turned on."
+                  name="FastLoadMaxInsertCommitSize">2147483647</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Insert and Update Rows\Contact.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
+                  connectionManagerRefId="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input]"
+                  errorOrTruncationOperation="Insert"
+                  errorRowDisposition="FailComponent"
+                  hasSideEffects="true"
+                  name="OLE DB Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].Columns[FirstName]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="FirstName"
+                      externalMetadataColumnId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].ExternalColumns[FirstName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]" />
+                    <inputColumn
+                      refId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].Columns[MiddleName]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="MiddleName"
+                      externalMetadataColumnId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].ExternalColumns[MiddleName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]" />
+                    <inputColumn
+                      refId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].Columns[LastName]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="LastName"
+                      externalMetadataColumnId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].ExternalColumns[LastName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]" />
+                    <inputColumn
+                      refId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].Columns[Email]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="Email"
+                      externalMetadataColumnId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].ExternalColumns[Email]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].ExternalColumns[FirstName]"
+                      dataType="wstr"
+                      length="50"
+                      name="FirstName" />
+                    <externalMetadataColumn
+                      refId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].ExternalColumns[MiddleName]"
+                      dataType="wstr"
+                      length="50"
+                      name="MiddleName" />
+                    <externalMetadataColumn
+                      refId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].ExternalColumns[LastName]"
+                      dataType="wstr"
+                      length="50"
+                      name="LastName" />
+                    <externalMetadataColumn
+                      refId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input].ExternalColumns[Email]"
+                      dataType="wstr"
+                      length="50"
+                      name="Email" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\Insert and Update Rows\Contact.Outputs[OLE DB Destination Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="OLE DB Destination Error Output"
+                  synchronousInputId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Insert and Update Rows\Contact.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Insert and Update Rows\Contact.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Insert and Update Rows\Contact.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Insert and Update Rows\Contact.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\Insert and Update Rows\Lookup"
               componentClassID="Microsoft.Lookup"
               contactInfo="Lookup;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;6"
               description="Joins additional columns to the data flow by looking up values in a table. For example, join to the 'employee id' column the employees table to get 'hire date' and 'employee name'. We recommend this transformation when the lookup table can fit into memory."
@@ -351,7 +877,8 @@
  ,LastName
  ,MiddleName
 
-FROM dbo.Contact</property>
+
+FROM Person.Contact</property>
                 <property
                   dataType="System.String"
                   description="Specifies a SQL statement that uses parameters to generate the lookup table."
@@ -363,7 +890,8 @@ FROM dbo.Contact</property>
  ,LastName
  ,MiddleName
 
-FROM dbo.Contact) [refTable]
+
+FROM Person.Contact) [refTable]
 where [refTable].[Email] = ?</property>
                 <property
                   dataType="System.Int32"
@@ -400,7 +928,7 @@ where [refTable].[Email] = ?</property>
                   containsID="true"
                   dataType="System.String"
                   description="Specifies the list of lineage identifiers that map to the parameters that the SQL statement in the SQLCommand property uses. Entries in the list are separated by semicolons."
-                  name="ParameterMap">#{Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]};</property>
+                  name="ParameterMap">#{Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]};</property>
                 <property
                   dataType="System.Int32"
                   description="Specifies the column code page to use when code page information is unavailable from the data source."
@@ -412,7 +940,7 @@ where [refTable].[Email] = ?</property>
               </properties>
               <connections>
                 <connection
-                  refId="Package\Data Flow Task\Lookup.Connections[OleDbConnection]"
+                  refId="Package\Insert and Update Rows\Lookup.Connections[OleDbConnection]"
                   connectionManagerID="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
                   connectionManagerRefId="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
                   description="Connection manager used to access lookup data."
@@ -420,15 +948,15 @@ where [refTable].[Email] = ?</property>
               </connections>
               <inputs>
                 <input
-                  refId="Package\Data Flow Task\Lookup.Inputs[Lookup Input]"
+                  refId="Package\Insert and Update Rows\Lookup.Inputs[Lookup Input]"
                   name="Lookup Input">
                   <inputColumns>
                     <inputColumn
-                      refId="Package\Data Flow Task\Lookup.Inputs[Lookup Input].Columns[Email]"
+                      refId="Package\Insert and Update Rows\Lookup.Inputs[Lookup Input].Columns[Email]"
                       cachedDataType="wstr"
                       cachedLength="50"
                       cachedName="Email"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]">
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]">
                       <properties>
                         <property
                           dataType="System.String"
@@ -446,18 +974,18 @@ where [refTable].[Email] = ?</property>
               </inputs>
               <outputs>
                 <output
-                  refId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output]"
+                  refId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output]"
                   errorOrTruncationOperation="Lookup"
                   exclusionGroup="1"
                   name="Lookup Match Output"
-                  synchronousInputId="Package\Data Flow Task\Lookup.Inputs[Lookup Input]">
+                  synchronousInputId="Package\Insert and Update Rows\Lookup.Inputs[Lookup Input]">
                   <outputColumns>
                     <outputColumn
-                      refId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_Email]"
+                      refId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_Email]"
                       dataType="wstr"
                       errorOrTruncationOperation="Copy Column"
                       length="50"
-                      lineageId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_Email]"
+                      lineageId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_Email]"
                       name="LkUp_Email"
                       truncationRowDisposition="FailComponent">
                       <properties>
@@ -468,11 +996,11 @@ where [refTable].[Email] = ?</property>
                       </properties>
                     </outputColumn>
                     <outputColumn
-                      refId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_FirstName]"
+                      refId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_FirstName]"
                       dataType="wstr"
                       errorOrTruncationOperation="Copy Column"
                       length="50"
-                      lineageId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_FirstName]"
+                      lineageId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_FirstName]"
                       name="LkUp_FirstName"
                       truncationRowDisposition="FailComponent">
                       <properties>
@@ -483,11 +1011,11 @@ where [refTable].[Email] = ?</property>
                       </properties>
                     </outputColumn>
                     <outputColumn
-                      refId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_LastName]"
+                      refId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_LastName]"
                       dataType="wstr"
                       errorOrTruncationOperation="Copy Column"
                       length="50"
-                      lineageId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_LastName]"
+                      lineageId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_LastName]"
                       name="LkUp_LastName"
                       truncationRowDisposition="FailComponent">
                       <properties>
@@ -498,11 +1026,11 @@ where [refTable].[Email] = ?</property>
                       </properties>
                     </outputColumn>
                     <outputColumn
-                      refId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_MiddleName]"
+                      refId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_MiddleName]"
                       dataType="wstr"
                       errorOrTruncationOperation="Copy Column"
                       length="50"
-                      lineageId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output].Columns[LkUp_MiddleName]"
+                      lineageId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output].Columns[LkUp_MiddleName]"
                       name="LkUp_MiddleName"
                       truncationRowDisposition="FailComponent">
                       <properties>
@@ -516,30 +1044,30 @@ where [refTable].[Email] = ?</property>
                   <externalMetadataColumns />
                 </output>
                 <output
-                  refId="Package\Data Flow Task\Lookup.Outputs[Lookup No Match Output]"
+                  refId="Package\Insert and Update Rows\Lookup.Outputs[Lookup No Match Output]"
                   description="The Lookup output that handles rows with no matching entries in the reference dataset. Use this output when the NoMatchBehavior property is set to &quot;Send rows with no matching entries to the no match output.&quot;"
                   exclusionGroup="1"
                   name="Lookup No Match Output"
-                  synchronousInputId="Package\Data Flow Task\Lookup.Inputs[Lookup Input]">
+                  synchronousInputId="Package\Insert and Update Rows\Lookup.Inputs[Lookup Input]">
                   <externalMetadataColumns />
                 </output>
                 <output
-                  refId="Package\Data Flow Task\Lookup.Outputs[Lookup Error Output]"
+                  refId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Error Output]"
                   exclusionGroup="1"
                   isErrorOut="true"
                   name="Lookup Error Output"
-                  synchronousInputId="Package\Data Flow Task\Lookup.Inputs[Lookup Input]">
+                  synchronousInputId="Package\Insert and Update Rows\Lookup.Inputs[Lookup Input]">
                   <outputColumns>
                     <outputColumn
-                      refId="Package\Data Flow Task\Lookup.Outputs[Lookup Error Output].Columns[ErrorCode]"
+                      refId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Error Output].Columns[ErrorCode]"
                       dataType="i4"
-                      lineageId="Package\Data Flow Task\Lookup.Outputs[Lookup Error Output].Columns[ErrorCode]"
+                      lineageId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Error Output].Columns[ErrorCode]"
                       name="ErrorCode"
                       specialFlags="1" />
                     <outputColumn
-                      refId="Package\Data Flow Task\Lookup.Outputs[Lookup Error Output].Columns[ErrorColumn]"
+                      refId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Error Output].Columns[ErrorColumn]"
                       dataType="i4"
-                      lineageId="Package\Data Flow Task\Lookup.Outputs[Lookup Error Output].Columns[ErrorColumn]"
+                      lineageId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Error Output].Columns[ErrorColumn]"
                       name="ErrorColumn"
                       specialFlags="2" />
                   </outputColumns>
@@ -548,7 +1076,7 @@ where [refTable].[Email] = ?</property>
               </outputs>
             </component>
             <component
-              refId="Package\Data Flow Task\OLE DB Source"
+              refId="Package\Insert and Update Rows\OLE DB Source"
               componentClassID="Microsoft.OLEDBSource"
               contactInfo="OLE DB Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;7"
               description="OLE DB Source"
@@ -604,7 +1132,7 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
               </properties>
               <connections>
                 <connection
-                  refId="Package\Data Flow Task\OLE DB Source.Connections[OleDbConnection]"
+                  refId="Package\Insert and Update Rows\OLE DB Source.Connections[OleDbConnection]"
                   connectionManagerID="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
                   connectionManagerRefId="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
                   description="The OLE DB runtime connection used to access the database."
@@ -612,114 +1140,114 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
               </connections>
               <outputs>
                 <output
-                  refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output]"
+                  refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output]"
                   name="OLE DB Source Output">
                   <outputColumns>
                     <outputColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]"
                       dataType="wstr"
                       errorOrTruncationOperation="Conversion"
                       errorRowDisposition="FailComponent"
-                      externalMetadataColumnId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[FirstName]"
+                      externalMetadataColumnId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[FirstName]"
                       length="50"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]"
                       name="FirstName"
                       truncationRowDisposition="FailComponent" />
                     <outputColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]"
                       dataType="wstr"
                       errorOrTruncationOperation="Conversion"
                       errorRowDisposition="FailComponent"
-                      externalMetadataColumnId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[MiddleName]"
+                      externalMetadataColumnId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[MiddleName]"
                       length="50"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]"
                       name="MiddleName"
                       truncationRowDisposition="FailComponent" />
                     <outputColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]"
                       dataType="wstr"
                       errorOrTruncationOperation="Conversion"
                       errorRowDisposition="FailComponent"
-                      externalMetadataColumnId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[LastName]"
+                      externalMetadataColumnId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[LastName]"
                       length="50"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]"
                       name="LastName"
                       truncationRowDisposition="FailComponent" />
                     <outputColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]"
                       dataType="wstr"
                       errorOrTruncationOperation="Conversion"
                       errorRowDisposition="FailComponent"
-                      externalMetadataColumnId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[EmailAddress]"
+                      externalMetadataColumnId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[EmailAddress]"
                       length="50"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]"
                       name="Email"
                       truncationRowDisposition="FailComponent" />
                   </outputColumns>
                   <externalMetadataColumns
                     isUsed="True">
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[FirstName]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[FirstName]"
                       dataType="wstr"
                       length="50"
                       name="FirstName" />
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[MiddleName]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[MiddleName]"
                       dataType="wstr"
                       length="50"
                       name="MiddleName" />
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[LastName]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[LastName]"
                       dataType="wstr"
                       length="50"
                       name="LastName" />
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[EmailAddress]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[EmailAddress]"
                       dataType="wstr"
                       length="50"
                       name="EmailAddress" />
                   </externalMetadataColumns>
                 </output>
                 <output
-                  refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output]"
+                  refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output]"
                   isErrorOut="true"
                   name="OLE DB Source Error Output">
                   <outputColumns>
                     <outputColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
                       dataType="i4"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
                       name="ErrorCode"
                       specialFlags="1" />
                     <outputColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
                       dataType="i4"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
                       name="ErrorColumn"
                       specialFlags="2" />
                     <outputColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[FirstName]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[FirstName]"
                       dataType="wstr"
                       length="50"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[FirstName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[FirstName]"
                       name="FirstName" />
                     <outputColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[MiddleName]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[MiddleName]"
                       dataType="wstr"
                       length="50"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[MiddleName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[MiddleName]"
                       name="MiddleName" />
                     <outputColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[LastName]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[LastName]"
                       dataType="wstr"
                       length="50"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[LastName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[LastName]"
                       name="LastName" />
                     <outputColumn
-                      refId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[EmailAddress]"
+                      refId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[EmailAddress]"
                       dataType="wstr"
                       length="50"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[EmailAddress]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[EmailAddress]"
                       name="EmailAddress" />
                   </outputColumns>
                   <externalMetadataColumns />
@@ -727,7 +1255,7 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
               </outputs>
             </component>
             <component
-              refId="Package\Data Flow Task\StageUpdates"
+              refId="Package\Insert and Update Rows\StageUpdates"
               componentClassID="Microsoft.OLEDBDestination"
               contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
               description="OLE DB Destination"
@@ -784,7 +1312,7 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
               </properties>
               <connections>
                 <connection
-                  refId="Package\Data Flow Task\StageUpdates.Connections[OleDbConnection]"
+                  refId="Package\Insert and Update Rows\StageUpdates.Connections[OleDbConnection]"
                   connectionManagerID="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
                   connectionManagerRefId="Package.ConnectionManagers[DEVSCOPE19\SQL2016.AdventureWorks2014]"
                   description="The OLE DB runtime connection used to access the database."
@@ -792,60 +1320,60 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
               </connections>
               <inputs>
                 <input
-                  refId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input]"
+                  refId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input]"
                   errorOrTruncationOperation="Insert"
                   errorRowDisposition="FailComponent"
                   hasSideEffects="true"
                   name="OLE DB Destination Input">
                   <inputColumns>
                     <inputColumn
-                      refId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].Columns[FirstName]"
+                      refId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].Columns[FirstName]"
                       cachedDataType="wstr"
                       cachedLength="50"
                       cachedName="FirstName"
-                      externalMetadataColumnId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[FirstName]"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]" />
+                      externalMetadataColumnId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[FirstName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[FirstName]" />
                     <inputColumn
-                      refId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].Columns[MiddleName]"
+                      refId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].Columns[MiddleName]"
                       cachedDataType="wstr"
                       cachedLength="50"
                       cachedName="MiddleName"
-                      externalMetadataColumnId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[MiddleName]"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]" />
+                      externalMetadataColumnId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[MiddleName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[MiddleName]" />
                     <inputColumn
-                      refId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].Columns[LastName]"
+                      refId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].Columns[LastName]"
                       cachedDataType="wstr"
                       cachedLength="50"
                       cachedName="LastName"
-                      externalMetadataColumnId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[LastName]"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]" />
+                      externalMetadataColumnId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[LastName]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[LastName]" />
                     <inputColumn
-                      refId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].Columns[Email]"
+                      refId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].Columns[Email]"
                       cachedDataType="wstr"
                       cachedLength="50"
                       cachedName="Email"
-                      externalMetadataColumnId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[Email]"
-                      lineageId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]" />
+                      externalMetadataColumnId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[Email]"
+                      lineageId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output].Columns[Email]" />
                   </inputColumns>
                   <externalMetadataColumns
                     isUsed="True">
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[FirstName]"
+                      refId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[FirstName]"
                       dataType="wstr"
                       length="50"
                       name="FirstName" />
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[MiddleName]"
+                      refId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[MiddleName]"
                       dataType="wstr"
                       length="50"
                       name="MiddleName" />
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[LastName]"
+                      refId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[LastName]"
                       dataType="wstr"
                       length="50"
                       name="LastName" />
                     <externalMetadataColumn
-                      refId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[Email]"
+                      refId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input].ExternalColumns[Email]"
                       dataType="wstr"
                       length="50"
                       name="Email" />
@@ -854,22 +1382,22 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
               </inputs>
               <outputs>
                 <output
-                  refId="Package\Data Flow Task\StageUpdates.Outputs[OLE DB Destination Error Output]"
+                  refId="Package\Insert and Update Rows\StageUpdates.Outputs[OLE DB Destination Error Output]"
                   exclusionGroup="1"
                   isErrorOut="true"
                   name="OLE DB Destination Error Output"
-                  synchronousInputId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input]">
+                  synchronousInputId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input]">
                   <outputColumns>
                     <outputColumn
-                      refId="Package\Data Flow Task\StageUpdates.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      refId="Package\Insert and Update Rows\StageUpdates.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
                       dataType="i4"
-                      lineageId="Package\Data Flow Task\StageUpdates.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      lineageId="Package\Insert and Update Rows\StageUpdates.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
                       name="ErrorCode"
                       specialFlags="1" />
                     <outputColumn
-                      refId="Package\Data Flow Task\StageUpdates.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      refId="Package\Insert and Update Rows\StageUpdates.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
                       dataType="i4"
-                      lineageId="Package\Data Flow Task\StageUpdates.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      lineageId="Package\Insert and Update Rows\StageUpdates.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
                       name="ErrorColumn"
                       specialFlags="2" />
                   </outputColumns>
@@ -880,25 +1408,25 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
           </components>
           <paths>
             <path
-              refId="Package\Data Flow Task.Paths[Lookup Match Output]"
-              endId="Package\Data Flow Task\Conditional Split.Inputs[Conditional Split Input]"
+              refId="Package\Insert and Update Rows.Paths[Lookup Match Output]"
+              endId="Package\Insert and Update Rows\Conditional Split.Inputs[Conditional Split Input]"
               name="Lookup Match Output"
-              startId="Package\Data Flow Task\Lookup.Outputs[Lookup Match Output]" />
+              startId="Package\Insert and Update Rows\Lookup.Outputs[Lookup Match Output]" />
             <path
-              refId="Package\Data Flow Task.Paths[Lookup No Match Output]"
-              endId="Package\Data Flow Task\Contact.Inputs[OLE DB Destination Input]"
+              refId="Package\Insert and Update Rows.Paths[Lookup No Match Output]"
+              endId="Package\Insert and Update Rows\Contact.Inputs[OLE DB Destination Input]"
               name="Lookup No Match Output"
-              startId="Package\Data Flow Task\Lookup.Outputs[Lookup No Match Output]" />
+              startId="Package\Insert and Update Rows\Lookup.Outputs[Lookup No Match Output]" />
             <path
-              refId="Package\Data Flow Task.Paths[OLE DB Source Output]"
-              endId="Package\Data Flow Task\Lookup.Inputs[Lookup Input]"
+              refId="Package\Insert and Update Rows.Paths[OLE DB Source Output]"
+              endId="Package\Insert and Update Rows\Lookup.Inputs[Lookup Input]"
               name="OLE DB Source Output"
-              startId="Package\Data Flow Task\OLE DB Source.Outputs[OLE DB Source Output]" />
+              startId="Package\Insert and Update Rows\OLE DB Source.Outputs[OLE DB Source Output]" />
             <path
-              refId="Package\Data Flow Task.Paths[Updated Rows]"
-              endId="Package\Data Flow Task\StageUpdates.Inputs[OLE DB Destination Input]"
+              refId="Package\Insert and Update Rows.Paths[Updated Rows]"
+              endId="Package\Insert and Update Rows\StageUpdates.Inputs[OLE DB Destination Input]"
               name="Updated Rows"
-              startId="Package\Data Flow Task\Conditional Split.Outputs[Updated Rows]" />
+              startId="Package\Insert and Update Rows\Conditional Split.Outputs[Updated Rows]" />
           </paths>
         </pipeline>
       </DTS:ObjectData>
@@ -917,7 +1445,7 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{BBC7B887-DE9B-41D1-B4FC-3DE3B8F01572}"
-          SQLTask:SqlStatementSource="TRUNCATE TABLE dbo.StageUpdates" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="TRUNCATE TABLE dbo.StageUpdates;&#xA;TRUNCATE TABLE dbo.StageDeletes;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
       </DTS:ObjectData>
     </DTS:Executable>
   </DTS:Executables>
@@ -926,7 +1454,7 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
       DTS:refId="Package.PrecedenceConstraints[Constraint]"
       DTS:CreationName=""
       DTS:DTSID="{CE3F08D2-18CD-494F-BEEB-1ED79E59057E}"
-      DTS:From="Package\Data Flow Task"
+      DTS:From="Package\Insert and Update Rows"
       DTS:LogicalAnd="True"
       DTS:ObjectName="Constraint"
       DTS:To="Package\Apply Staged Updates" />
@@ -937,7 +1465,23 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
       DTS:From="Package\Truncate StageUpdates"
       DTS:LogicalAnd="True"
       DTS:ObjectName="Constraint 1"
-      DTS:To="Package\Data Flow Task" />
+      DTS:To="Package\Insert and Update Rows" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 2]"
+      DTS:CreationName=""
+      DTS:DTSID="{D1164306-B4E9-4C70-8124-B71DC4AC2D5E}"
+      DTS:From="Package\Apply Staged Updates"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 2"
+      DTS:To="Package\Delete  Rows" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 3]"
+      DTS:CreationName=""
+      DTS:DTSID="{3F577C7B-B1E1-449C-BB7B-8174BFFD0C10}"
+      DTS:From="Package\Delete  Rows"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 3"
+      DTS:To="Package\Apply Staged Deletes" />
   </DTS:PrecedenceConstraints>
   <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
 <!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
@@ -950,29 +1494,41 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
     design-time-name="Package">
     <LayoutInfo>
       <GraphLayout
-        Capacity="8" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="16" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
-          Size="151,42"
-          Id="Package\Data Flow Task"
-          TopLeft="152.166666666667,171.5" />
+          Size="179,42"
+          Id="Package\Apply Staged Deletes"
+          TopLeft="144.533333333334,459" />
         <NodeLayout
           Size="182,42"
           Id="Package\Apply Staged Updates"
-          TopLeft="136.666666666667,267" />
+          TopLeft="143.033333333334,272" />
+        <NodeLayout
+          Size="141,42"
+          Id="Package\Delete  Rows"
+          TopLeft="163.533333333334,365.5" />
+        <NodeLayout
+          Size="193,42"
+          Id="Package\Insert and Update Rows"
+          TopLeft="137.533333333334,178.5" />
+        <NodeLayout
+          Size="189,42"
+          Id="Package\Truncate StageUpdates"
+          TopLeft="139.533333333334,85" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint]"
-          TopLeft="227.666666666667,213.5">
+          TopLeft="234.033333333334,220.5">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,53.5"
+              EndConnector="0,51.5"
               Start="0,0"
-              End="0,46">
+              End="0,44">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,46" />
+                    End="0,44" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -981,24 +1537,64 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="189,42"
-          Id="Package\Truncate StageUpdates"
-          TopLeft="133.166666666667,76" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 1]"
-          TopLeft="227.666666666667,118">
+          TopLeft="234.033333333334,127">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,53.5"
+              EndConnector="0,51.5"
               Start="0,0"
-              End="0,46">
+              End="0,44">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,46" />
+                    End="0,44" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 2]"
+          TopLeft="234.033333333334,314">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,51.5"
+              Start="0,0"
+              End="0,44">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,44" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 3]"
+          TopLeft="234.033333333334,407.5">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,51.5"
+              Start="0,0"
+              End="0,44">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,44" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -1011,36 +1607,36 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
     </LayoutInfo>
   </Package>
   <TaskHost
-    design-time-name="Package\Data Flow Task">
+    design-time-name="Package\Delete  Rows">
     <LayoutInfo>
       <GraphLayout
-        Capacity="16" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
-        <NodeLayout
-          Size="113,42"
-          Id="Package\Data Flow Task\Lookup"
-          TopLeft="141.833333333333,138" />
-        <NodeLayout
-          Size="115,42"
-          Id="Package\Data Flow Task\Contact"
-          TopLeft="140.833333333333,233" />
+        Capacity="8" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
           Size="150,42"
-          Id="Package\Data Flow Task\OLE DB Source"
-          TopLeft="123.333333333333,43" />
+          Id="Package\Delete  Rows\OLE DB Source"
+          TopLeft="174.166666666667,77" />
+        <NodeLayout
+          Size="140,42"
+          Id="Package\Delete  Rows\StageDeletes"
+          TopLeft="179.166666666667,273" />
+        <NodeLayout
+          Size="113,42"
+          Id="Package\Delete  Rows\Lookup"
+          TopLeft="192.666666666667,175" />
         <EdgeLayout
-          Id="Package\Data Flow Task.Paths[OLE DB Source Output]"
-          TopLeft="198.333333333333,85">
+          Id="Package\Delete  Rows.Paths[OLE DB Source Output]"
+          TopLeft="249.166666666667,119">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,53"
+              EndConnector="0,56"
               Start="0,0"
-              End="0,45.5">
+              End="0,48.5">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,45.5" />
+                    End="0,48.5" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -1050,63 +1646,108 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
-          Id="Package\Data Flow Task.Paths[Lookup No Match Output]"
-          TopLeft="198.333333333333,180">
+          Id="Package\Delete  Rows.Paths[Lookup No Match Output]"
+          TopLeft="249.166666666667,217">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,53"
+              EndConnector="0,56"
               Start="0,0"
-              End="0,45.5">
+              End="0,48.5">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,45.5" />
+                    End="0,48.5" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
             <mssgm:EdgeLabel
-              BoundingBox="-55.80638671875,14.9453125,111.6127734375,11.609375"
+              BoundingBox="-55.80638671875,18.4453125,111.6127734375,11.609375"
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
+      </GraphLayout>
+    </LayoutInfo>
+  </TaskHost>
+  <PipelineComponentMetadata
+    design-time-name="Package\Delete  Rows\OLE DB Source">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Delete  Rows\StageDeletes">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Delete  Rows\Lookup">
+    <Properties>
+      <Property>
+        <Name>OverwriteParamsSQLProp</Name>
+        <Value
+          type="q2:boolean">false</Value>
+      </Property>
+      <Property>
+        <Name>UsedTableName</Name>
+        <Value
+          type="q3:string"></Value>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q4:int">0</Value>
+      </Property>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <TaskHost
+    design-time-name="Package\Insert and Update Rows">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="16" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        <NodeLayout
+          Size="113,42"
+          Id="Package\Insert and Update Rows\Lookup"
+          TopLeft="141.833333333333,138" />
+        <NodeLayout
+          Size="150,42"
+          Id="Package\Insert and Update Rows\OLE DB Source"
+          TopLeft="123.333333333333,43" />
         <NodeLayout
           Size="155,42"
-          Id="Package\Data Flow Task\Conditional Split"
+          Id="Package\Insert and Update Rows\Conditional Split"
           TopLeft="369.75,138" />
-        <EdgeLayout
-          Id="Package\Data Flow Task.Paths[Lookup Match Output]"
-          TopLeft="254.833333333333,159">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="114.916666666667,0"
-              Start="0,0"
-              End="107.416666666667,0">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="107.416666666667,0" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="5.5169466145835,5,96.3827734375,11.609375"
-              RelativePosition="Any" />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
+        <NodeLayout
+          Size="115,42"
+          Id="Package\Insert and Update Rows\Contact"
+          TopLeft="140.833333333333,233" />
         <NodeLayout
           Size="144,42"
-          Id="Package\Data Flow Task\StageUpdates"
+          Id="Package\Insert and Update Rows\StageUpdates"
           TopLeft="375.25,235" />
         <EdgeLayout
-          Id="Package\Data Flow Task.Paths[Updated Rows]"
+          Id="Package\Insert and Update Rows.Paths[Updated Rows]"
           TopLeft="447.25,180">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -1129,11 +1770,115 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
+        <EdgeLayout
+          Id="Package\Insert and Update Rows.Paths[OLE DB Source Output]"
+          TopLeft="198.333333333333,85">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,53"
+              Start="0,0"
+              End="0,45.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,45.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\Insert and Update Rows.Paths[Lookup No Match Output]"
+          TopLeft="198.333333333333,180">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,53"
+              Start="0,0"
+              End="0,45.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,45.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-55.80638671875,14.9453125,111.6127734375,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\Insert and Update Rows.Paths[Lookup Match Output]"
+          TopLeft="254.833333333333,159">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="114.916666666667,0"
+              Start="0,0"
+              End="107.416666666667,0">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="107.416666666667,0" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="5.5169466145835,5,96.3827734375,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
       </GraphLayout>
     </LayoutInfo>
   </TaskHost>
   <PipelineComponentMetadata
-    design-time-name="Package\Data Flow Task\Lookup">
+    design-time-name="Package\Insert and Update Rows\OLE DB Source">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Insert and Update Rows\Contact">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Insert and Update Rows\StageUpdates">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Insert and Update Rows\Lookup">
     <Properties>
       <Property>
         <Name>OverwriteParamsSQLProp</Name>
@@ -1152,40 +1897,6 @@ ON EA.BusinessEntityID = P.BusinessEntityID</property>
       </Property>
       <Property>
         <Name>DataSourceViewID</Name>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\Data Flow Task\Contact">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q2:string">Table</Value>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\Data Flow Task\OLE DB Source">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\Data Flow Task\StageUpdates">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q2:string">Table</Value>
       </Property>
     </Properties>
   </PipelineComponentMetadata>
