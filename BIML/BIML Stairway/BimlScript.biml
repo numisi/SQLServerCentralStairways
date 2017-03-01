@@ -1,0 +1,14 @@
+<Biml xmlns="http://schemas.varigence.com/biml.xsd">
+  <Connections>
+    <Connection Name="TestDB" ConnectionString="Data Source=DEVSCOPE19\SQL2016;Initial Catalog=Tests;Provider=SQLNCLI11.1;Integrated Security=SSPI;" />
+  </Connections>
+  <Packages>
+    <Package Name="TestBimlPackage" ConstraintMode="Parallel" ProtectionLevel="EncryptSensitiveWithUserKey">
+      <Tasks>
+        <ExecuteSQL Name="Test Select" ConnectionName="TestDB">
+          <DirectInput>Select 1 As One</DirectInput>
+        </ExecuteSQL>
+      </Tasks>
+    </Package>
+  </Packages>
+</Biml>

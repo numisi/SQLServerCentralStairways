@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DTS:Executable DTS:CreationDate="03/01/2017 00:39:30" DTS:CreationName="Microsoft.Package" DTS:CreatorComputerName="DEVSCOPE19" DTS:CreatorName="nunomiguel.silva" DTS:DTSID="{8F7E4A7E-B466-45C5-88D6-3128413F07E1}" DTS:ExecutableType="Microsoft.Package" DTS:LastModifiedProductVersion="" DTS:LocaleID="2070" DTS:ObjectName="TestBimlPackage" DTS:refId="Package" DTS:VersionBuild="0" DTS:VersionGUID="{3F7362D8-7CA7-48D0-9B37-D47D3DA17341}" DTS:VersionMajor="0" xmlns:DTS="www.microsoft.com/SqlServer/Dts">
+  <DTS:Property DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager DTS:CreationName="OLEDB" DTS:DTSID="{C006FC36-BB1B-4B25-9752-F36919312C8F}" DTS:ObjectName="TestDB" DTS:refId="Package.ConnectionManagers[TestDB]">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager DTS:ConnectionString="data source=DEVSCOPE19\SQL2016;initial catalog=Tests;provider=SQLNCLI11.1;integrated security=SSPI"></DTS:ConnectionManager>
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Executables>
+    <DTS:Executable DTS:CreationName="Microsoft.ExecuteSQLTask" DTS:DTSID="{35D2A683-D08F-479B-864D-C713C4F26FC2}" DTS:ExecutableType="Microsoft.ExecuteSQLTask" DTS:LocaleID="-1" DTS:ObjectName="Test Select" DTS:refId="Package\Test Select" DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2014; © 2014 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData SQLTask:Connection="TestDB" SQLTask:SqlStatementSource="Select 1 As One" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask"></SQLTask:SqlTaskData>
+      </DTS:ObjectData>
+    </DTS:Executable>
+  </DTS:Executables>
+</DTS:Executable>
